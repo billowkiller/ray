@@ -83,13 +83,15 @@ message TaskTableData {
 message ActorTableData {
   // State of an actor.
   enum ActorState {
+    // Actor is pending.
+    PENDING = 0;
     // Actor is alive.
-    ALIVE = 0;
+    ALIVE = 1;
     // Actor is dead, now being reconstructed.
     // After reconstruction finishes, the state will become alive again.
-    RECONSTRUCTING = 1;
+    RECONSTRUCTING = 2;
     // Actor is already dead and won't be reconstructed.
-    DEAD = 2;
+    DEAD = 3;
   }
   // The ID of the actor that was created.
   bytes actor_id = 1;
@@ -115,6 +117,8 @@ message ActorTableData {
   bool is_direct_call = 11;
   // Whether the actor is persistent.
   bool is_detached = 12;
+  // The task specification of this actor
+  TaskSpec task_spec = 13;
 }
 
 message ErrorTableData {
@@ -296,4 +300,12 @@ enum ErrorType {
   // exposed to user code; it is only used internally to indicate the result of a direct
   // call has been placed in plasma.
   OBJECT_IN_PLASMA = 4;
+}
+
+message CreateActorRequest {
+  TaskSpec task_spec = 1;
+}
+
+message CreateActorReply {
+  bool success = 1;
 }

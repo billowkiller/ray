@@ -1,8 +1,20 @@
 #include "actor_info_handler_impl.h"
+#include "gcs_actor_manager.h"
+#include "gcs_leased_worker.h"
+#include "gcs_node_manager.h"
 #include "ray/util/logging.h"
 
 namespace ray {
 namespace rpc {
+
+void DefaultActorInfoHandler::HandleCreateActor(
+    const ray::rpc::CreateActorRequest &request, ray::rpc::CreateActorReply *reply,
+    ray::rpc::SendReplyCallback send_reply_callback) {
+  gcs_actor_manager_->CreateActor(request, [reply, send_reply_callback](Status status) {
+    RAY_UNUSED(reply);
+    send_reply_callback(status, nullptr, nullptr);
+  });
+}
 
 void DefaultActorInfoHandler::HandleGetActorInfo(
     const rpc::GetActorInfoRequest &request, rpc::GetActorInfoReply *reply,
@@ -56,20 +68,22 @@ void DefaultActorInfoHandler::HandleUpdateActorInfo(
     rpc::SendReplyCallback send_reply_callback) {
   ActorID actor_id = ActorID::FromBinary(request.actor_id());
   RAY_LOG(DEBUG) << "Updating actor info, actor id = " << actor_id;
-  auto actor_table_data = std::make_shared<ActorTableData>();
-  actor_table_data->CopyFrom(request.actor_table_data());
-  auto on_done = [actor_id, send_reply_callback](Status status) {
-    if (!status.ok()) {
-      RAY_LOG(ERROR) << "Failed to update actor info: " << status.ToString()
-                     << ", actor id = " << actor_id;
-    }
-    send_reply_callback(status, nullptr, nullptr);
-  };
 
-  Status status = gcs_client_.Actors().AsyncUpdate(actor_id, actor_table_data, on_done);
-  if (!status.ok()) {
-    on_done(status);
+  if (request.actor_table_data().state() == ray::rpc::ActorTableData::RECONSTRUCTING) {
+    auto node_id = ClientID::FromBinary(request.actor_table_data().address().raylet_id());
+    auto worker_id =
+        WorkerID::FromBinary(request.actor_table_data().address().worker_id());
+    if (auto node = gcs_node_manager_->GetNode(node_id)) {
+      if (auto leased_worker = node->RemoveLeasedWorker(worker_id)) {
+        if (auto actor = leased_worker->GetActor()) {
+          RAY_CHECK(actor->GetActorID() == ActorID::FromBinary(request.actor_id()));
+          gcs_actor_manager_->OnActorFailure(std::move(actor));
+        }
+      }
+    }
   }
+
+  send_reply_callback(Status::OK(), nullptr, nullptr);
   RAY_LOG(DEBUG) << "Finished updating actor info, actor id = " << actor_id;
 }
 

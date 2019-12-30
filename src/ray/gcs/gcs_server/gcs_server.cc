@@ -1,5 +1,8 @@
 #include "gcs_server.h"
 #include "actor_info_handler_impl.h"
+#include "gcs_actor_manager.h"
+#include "gcs_leased_worker.h"
+#include "gcs_node_manager.h"
 #include "job_info_handler_impl.h"
 #include "node_info_handler_impl.h"
 #include "object_info_handler_impl.h"
@@ -11,13 +14,22 @@ namespace gcs {
 GcsServer::GcsServer(const ray::gcs::GcsServerConfig &config)
     : config_(config),
       rpc_server_(config.grpc_server_name, config.grpc_server_port,
-                  config.grpc_server_thread_num) {}
+                  config.grpc_server_thread_num),
+      gcs_node_manager_(std::make_shared<GcsNodeManager>()),
+      gcs_actor_manager_(
+          std::make_shared<GcsActorManager>(main_service_, gcs_node_manager_)) {}
 
 GcsServer::~GcsServer() { Stop(); }
 
 void GcsServer::Start() {
   // Init backend client.
   InitBackendClient();
+
+  // Init gcs node_manager
+  InitGcsNodeManager();
+
+  // Init gcs actor manager
+  InitGcsActorManager();
 
   // Register rpc service.
   job_info_handler_ = InitJobInfoHandler();
@@ -70,19 +82,41 @@ void GcsServer::InitBackendClient() {
   RAY_CHECK(status.ok()) << "Failed to init redis gcs client as " << status;
 }
 
+void GcsServer::InitGcsNodeManager() {
+  auto node_failure_handler = [this](std::shared_ptr<GcsNode> node) {
+    auto leased_workers = node->RemoveAllLeasedWorkers();
+    for (auto &entry : leased_workers) {
+      if (auto actor = entry.second->GetActor()) {
+        // Unbind the actor to the node so that we can select a new node next round when
+        // recreate this actor.
+        actor->SetNodeID(ClientID::Nil());
+        gcs_actor_manager_->OnActorFailure(std::move(actor));
+      }
+    }
+  };
+  gcs_node_manager_ = std::make_shared<GcsNodeManager>(main_service_, redis_gcs_client_);
+  gcs_node_manager_->SetNodeFailureHandler(std::move(node_failure_handler));
+  gcs_node_manager_->Start();
+}
+
+void GcsServer::InitGcsActorManager() {
+  gcs_actor_manager_ = std::make_shared<GcsActorManager>(main_service_, redis_gcs_client_,
+                                                         gcs_node_manager_);
+}
+
 std::unique_ptr<rpc::JobInfoHandler> GcsServer::InitJobInfoHandler() {
   return std::unique_ptr<rpc::DefaultJobInfoHandler>(
       new rpc::DefaultJobInfoHandler(*redis_gcs_client_));
 }
 
 std::unique_ptr<rpc::ActorInfoHandler> GcsServer::InitActorInfoHandler() {
-  return std::unique_ptr<rpc::DefaultActorInfoHandler>(
-      new rpc::DefaultActorInfoHandler(*redis_gcs_client_));
+  return std::unique_ptr<rpc::DefaultActorInfoHandler>(new rpc::DefaultActorInfoHandler(
+      *redis_gcs_client_, gcs_actor_manager_, gcs_node_manager_));
 }
 
 std::unique_ptr<rpc::NodeInfoHandler> GcsServer::InitNodeInfoHandler() {
   return std::unique_ptr<rpc::DefaultNodeInfoHandler>(
-      new rpc::DefaultNodeInfoHandler(*redis_gcs_client_));
+      new rpc::DefaultNodeInfoHandler(*redis_gcs_client_, gcs_node_manager_));
 }
 
 std::unique_ptr<rpc::ObjectInfoHandler> GcsServer::InitObjectInfoHandler() {
