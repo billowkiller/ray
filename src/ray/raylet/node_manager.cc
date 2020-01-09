@@ -1003,24 +1003,30 @@ void NodeManager::HandleDisconnectedActor(const ActorID &actor_id, bool was_loca
       actor_registration.GetRemainingReconstructions() > 0 && !intentional_disconnect
           ? ActorTableData::RECONSTRUCTING
           : ActorTableData::DEAD;
-  if (was_local) {
-    // Clean up the dummy objects from this actor.
-    RAY_LOG(DEBUG) << "Removing dummy objects for actor: " << actor_id;
-    for (auto &dummy_object_pair : actor_entry->second.GetDummyObjects()) {
-      HandleObjectMissing(dummy_object_pair.first);
-    }
-  }
-  // Update the actor's state.
   ActorTableData new_actor_info = actor_entry->second.GetTableData();
   new_actor_info.set_state(new_state);
-  if (was_local) {
-    // If the actor was local, immediately update the state in actor registry.
-    // So if we receive any actor tasks before we receive GCS notification,
-    // these tasks can be correctly routed to the `MethodsWaitingForActorCreation`
-    // queue, instead of being assigned to the dead actor.
-    HandleActorStateTransition(actor_id, ActorRegistration(new_actor_info));
+
+  if (!was_local) {
+    auto actor_notification = std::make_shared<ActorTableData>(std::move(new_actor_info));
+    RAY_CHECK_OK(
+        gcs_client_->Actors().AsyncUpdate(actor_id, actor_notification, nullptr));
+    return;
   }
 
+  // Clean up the dummy objects from this actor.
+  RAY_LOG(DEBUG) << "Removing dummy objects for actor: " << actor_id;
+  for (auto &dummy_object_pair : actor_entry->second.GetDummyObjects()) {
+    HandleObjectMissing(dummy_object_pair.first);
+  }
+
+  // Update the actor's state.
+  // If the actor was local, immediately update the state in actor registry.
+  // So if we receive any actor tasks before we receive GCS notification,
+  // these tasks can be correctly routed to the `MethodsWaitingForActorCreation`
+  // queue, instead of being assigned to the dead actor.
+  HandleActorStateTransition(actor_id, ActorRegistration(new_actor_info));
+
+  // Set the actor update callback
   auto done = [was_local, actor_id](Status status) {
     if (was_local && !status.ok()) {
       // If the disconnected actor was local, only this node will try to update actor
@@ -1029,10 +1035,10 @@ void NodeManager::HandleDisconnectedActor(const ActorID &actor_id, bool was_loca
                      << ", status: " << status.ToString();
     }
   };
-  auto actor_notification = std::make_shared<ActorTableData>(new_actor_info);
+  auto actor_notification = std::make_shared<ActorTableData>(std::move(new_actor_info));
   RAY_CHECK_OK(gcs_client_->Actors().AsyncUpdate(actor_id, actor_notification, done));
 
-  if (was_local && new_state == ActorTableData::RECONSTRUCTING) {
+  if (new_state == ActorTableData::RECONSTRUCTING) {
     RAY_LOG(INFO) << "A local actor (id = " << actor_id
                   << " ) is dead, reconstructing it.";
     const ObjectID &actor_creation_dummy_object_id =
@@ -1111,6 +1117,24 @@ void NodeManager::ProcessDisconnectClientMessage(
     }
     // Erase any lease metadata.
     leased_workers_.erase(worker->WorkerId());
+    // Erase leased actor workers and it's indexer
+    auto iter = leased_worker_actor_indexer_.find(worker->WorkerId());
+    if (iter != leased_worker_actor_indexer_.end()) {
+      auto actor_id = iter->second;
+
+      // Report the death event of the worker to gcs server.
+      // Maybe we could use another rpc interface (e.g. NotifyWorkerDeath) to instead of
+      // the `Actors().AsyncUpdate`.
+      auto actor_table_data = std::make_shared<ActorTableData>();
+      actor_table_data->set_state(rpc::ActorTableData::RECONSTRUCTING);
+      actor_table_data->set_actor_id(actor_id.Binary());
+      actor_table_data->mutable_address()->set_worker_id(worker->WorkerId().Binary());
+      RAY_CHECK_OK(
+          gcs_client_->Actors().AsyncUpdate(actor_id, actor_table_data, nullptr));
+
+      leased_actor_workers_.erase(actor_id);
+      leased_worker_actor_indexer_.erase(iter);
+    }
   }
 
   if (is_worker) {
@@ -1501,10 +1525,43 @@ void NodeManager::HandleRequestWorkerLease(const rpc::RequestWorkerLeaseRequest 
   rpc::Task task_message;
   task_message.mutable_task_spec()->CopyFrom(request.resource_spec());
   Task task(task_message);
-  bool is_actor_creation_task = task.GetTaskSpecification().IsActorCreationTask();
+
+  auto fill_worker_leased_reply = [this, reply](const std::string &address, int port,
+                                                const WorkerID &worker_id,
+                                                const ResourceIdSet &resource_ids) {
+    reply->mutable_worker_address()->set_ip_address(address);
+    reply->mutable_worker_address()->set_port(port);
+    reply->mutable_worker_address()->set_worker_id(worker_id.Binary());
+    reply->mutable_worker_address()->set_raylet_id(self_node_id_.Binary());
+    for (const auto &mapping : resource_ids.AvailableResources()) {
+      auto resource = reply->add_resource_mapping();
+      resource->set_name(mapping.first);
+      for (const auto &id : mapping.second.WholeIds()) {
+        auto rid = resource->add_resource_ids();
+        rid->set_index(id);
+        rid->set_quantity(1.0);
+      }
+      for (const auto &id : mapping.second.FractionalIds()) {
+        auto rid = resource->add_resource_ids();
+        rid->set_index(id.first);
+        rid->set_quantity(id.second.ToDouble());
+      }
+    }
+  };
+
   ActorID actor_id = ActorID::Nil();
+  bool is_actor_creation_task = task.GetTaskSpecification().IsActorCreationTask();
   if (is_actor_creation_task) {
     actor_id = task.GetTaskSpecification().ActorCreationId();
+    auto iter = leased_actor_workers_.find(actor_id);
+    if (iter != leased_actor_workers_.end()) {
+      // The actor is already leased a worker, reply directly.
+      auto worker = iter->second;
+      fill_worker_leased_reply(initial_config_.node_manager_address, worker->Port(),
+                               worker->WorkerId(), worker->GetLifetimeResourceIds());
+      send_reply_callback(Status::OK(), nullptr, nullptr);
+      return;
+    }
 
     // Save the actor creation task spec to GCS, which is needed to
     // reconstruct the actor when raylet detect it dies.
@@ -1517,18 +1574,20 @@ void NodeManager::HandleRequestWorkerLease(const rpc::RequestWorkerLeaseRequest 
   if (new_scheduler_enabled_) {
     auto request_resources = task.GetTaskSpecification().GetRequiredResources();
     auto work = std::make_pair(
-        [this, request_resources, reply, send_reply_callback](
-            std::shared_ptr<Worker> worker, ClientID spillback_to, std::string address,
-            int port) {
+        [this, actor_id, is_actor_creation_task, request_resources, reply,
+         send_reply_callback,
+         fill_worker_leased_reply](std::shared_ptr<Worker> worker, ClientID spillback_to,
+                                   std::string address, int port) {
           if (worker != nullptr) {
-            reply->mutable_worker_address()->set_ip_address(
-                initial_config_.node_manager_address);
-            reply->mutable_worker_address()->set_port(worker->Port());
-            reply->mutable_worker_address()->set_worker_id(worker->WorkerId().Binary());
-            reply->mutable_worker_address()->set_raylet_id(self_node_id_.Binary());
+            fill_worker_leased_reply(initial_config_.node_manager_address, worker->Port(),
+                                     worker->WorkerId(), ResourceIdSet());
             RAY_CHECK(leased_workers_.find(worker->WorkerId()) == leased_workers_.end());
             leased_workers_[worker->WorkerId()] = worker;
             leased_worker_resources_[worker->WorkerId()] = request_resources;
+            if (is_actor_creation_task) {
+              leased_actor_workers_[actor_id] = worker;
+              leased_worker_actor_indexer_[worker->WorkerId()] = actor_id;
+            }
           } else {
             reply->mutable_retry_at_raylet_address()->set_ip_address(address);
             reply->mutable_retry_at_raylet_address()->set_port(port);
@@ -1548,28 +1607,12 @@ void NodeManager::HandleRequestWorkerLease(const rpc::RequestWorkerLeaseRequest 
   RAY_LOG(DEBUG) << "Worker lease request " << task.GetTaskSpecification().TaskId();
   TaskID task_id = task.GetTaskSpecification().TaskId();
   task.OnDispatchInstead(
-      [this, task_id, reply, send_reply_callback](
+      [this, task_id, actor_id, is_actor_creation_task, send_reply_callback,
+       fill_worker_leased_reply](
           const std::shared_ptr<void> granted, const std::string &address, int port,
           const WorkerID &worker_id, const ResourceIdSet &resource_ids) {
         RAY_LOG(DEBUG) << "Worker lease request DISPATCH " << task_id;
-        reply->mutable_worker_address()->set_ip_address(address);
-        reply->mutable_worker_address()->set_port(port);
-        reply->mutable_worker_address()->set_worker_id(worker_id.Binary());
-        reply->mutable_worker_address()->set_raylet_id(self_node_id_.Binary());
-        for (const auto &mapping : resource_ids.AvailableResources()) {
-          auto resource = reply->add_resource_mapping();
-          resource->set_name(mapping.first);
-          for (const auto &id : mapping.second.WholeIds()) {
-            auto rid = resource->add_resource_ids();
-            rid->set_index(id);
-            rid->set_quantity(1.0);
-          }
-          for (const auto &id : mapping.second.FractionalIds()) {
-            auto rid = resource->add_resource_ids();
-            rid->set_index(id.first);
-            rid->set_quantity(id.second.ToDouble());
-          }
-        }
+        fill_worker_leased_reply(address, port, worker_id, resource_ids);
         send_reply_callback(Status::OK(), nullptr, nullptr);
 
         // TODO(swang): Kill worker if other end hangs up.
@@ -1577,7 +1620,12 @@ void NodeManager::HandleRequestWorkerLease(const rpc::RequestWorkerLeaseRequest 
         // worker.
         RAY_CHECK(leased_workers_.find(worker_id) == leased_workers_.end())
             << "Worker is already leased out " << worker_id;
-        leased_workers_[worker_id] = std::static_pointer_cast<Worker>(granted);
+        auto worker = std::static_pointer_cast<Worker>(granted);
+        leased_workers_[worker_id] = worker;
+        if (is_actor_creation_task) {
+          leased_actor_workers_[actor_id] = worker;
+          leased_worker_actor_indexer_[worker->WorkerId()] = actor_id;
+        }
       });
   task.OnSpillbackInstead(
       [reply, task_id, send_reply_callback](const ClientID &spillback_to,

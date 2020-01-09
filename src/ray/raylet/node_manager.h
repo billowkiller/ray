@@ -667,6 +667,9 @@ class NodeManager : public rpc::NodeManagerServiceHandler {
   std::deque<std::pair<ScheduleFn, Task>> tasks_to_schedule_;
   /// Queue of lease requests that should be scheduled onto workers.
   std::deque<std::pair<ScheduleFn, Task>> tasks_to_dispatch_;
+  /// The cache of the leased workers for actor creation task and it's indexer.
+  std::unordered_map<ActorID, std::shared_ptr<Worker>> leased_actor_workers_;
+  std::unordered_map<WorkerID, ActorID> leased_worker_actor_indexer_;
 
   /// Cache of gRPC clients to workers (not necessarily running on this node).
   /// Also includes the number of inflight requests to each worker - when this
