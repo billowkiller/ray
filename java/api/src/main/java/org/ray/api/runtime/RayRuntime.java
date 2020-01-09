@@ -2,7 +2,9 @@ package org.ray.api.runtime;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.ray.api.options.ActorGroupOptions;
 import org.ray.api.RayActor;
+import org.ray.api.RayActorGroup;
 import org.ray.api.RayObject;
 import org.ray.api.RayPyActor;
 import org.ray.api.WaitResult;
@@ -114,6 +116,8 @@ public interface RayRuntime {
    */
   <T> RayActor<T> createActor(RayFunc actorFactoryFunc, Object[] args,
       ActorCreationOptions options);
+
+  RayActorGroup createActorGroup(List<RayActor<?>> actors, ActorGroupOptions options);
 
   RuntimeContext getRuntimeContext();
 

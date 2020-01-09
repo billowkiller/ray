@@ -21,12 +21,15 @@ public class ActorCreationOptions extends BaseTaskOptions {
 
   public final String jvmOptions;
 
+  public final boolean pending;
+
   private ActorCreationOptions(Map<String, Double> resources, int maxReconstructions,
-                               boolean useDirectCall, String jvmOptions) {
+      boolean useDirectCall, String jvmOptions, boolean pending) {
     super(resources);
     this.maxReconstructions = maxReconstructions;
     this.useDirectCall = useDirectCall;
     this.jvmOptions = jvmOptions;
+    this.pending = pending;
   }
 
   /**
@@ -38,6 +41,7 @@ public class ActorCreationOptions extends BaseTaskOptions {
     private int maxReconstructions = NO_RECONSTRUCTION;
     private boolean useDirectCall = DEFAULT_USE_DIRECT_CALL;
     private String jvmOptions = null;
+    private boolean pending = false;
 
     public Builder setResources(Map<String, Double> resources) {
       this.resources = resources;
@@ -62,8 +66,14 @@ public class ActorCreationOptions extends BaseTaskOptions {
       return this;
     }
 
+    public Builder setPending(boolean pending) {
+      this.pending = pending;
+      return this;
+    }
+
     public ActorCreationOptions createActorCreationOptions() {
-      return new ActorCreationOptions(resources, maxReconstructions, useDirectCall, jvmOptions);
+      return new ActorCreationOptions(resources, maxReconstructions, useDirectCall, jvmOptions,
+          pending);
     }
   }
 

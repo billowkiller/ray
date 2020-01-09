@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import org.ray.api.RayActor;
+import org.ray.api.RayActorGroup;
 import org.ray.api.RayObject;
 import org.ray.api.RayPyActor;
 import org.ray.api.WaitResult;
@@ -14,6 +15,7 @@ import org.ray.api.function.RayFunc;
 import org.ray.api.function.RayFuncVoid;
 import org.ray.api.id.ObjectId;
 import org.ray.api.options.ActorCreationOptions;
+import org.ray.api.options.ActorGroupOptions;
 import org.ray.api.options.CallOptions;
 import org.ray.api.runtime.RayRuntime;
 import org.ray.api.runtimecontext.RuntimeContext;
@@ -114,6 +116,12 @@ public abstract class AbstractRayRuntime implements RayRuntime {
         functionManager.getFunction(workerContext.getCurrentJobId(), actorFactoryFunc)
             .functionDescriptor;
     return (RayActor<T>) createActorImpl(functionDescriptor, args, options);
+  }
+
+  @Override
+  public RayActorGroup createActorGroup(List<RayActor<?>> actors, ActorGroupOptions options) {
+    // TODO(yuyiming): impl
+    return null;
   }
 
   private void checkPyArguments(Object[] args) {
