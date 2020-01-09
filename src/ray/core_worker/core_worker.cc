@@ -1060,6 +1060,17 @@ void CoreWorker::HandlePushTask(const rpc::PushTaskRequest &request,
 
   task_queue_length_ += 1;
   task_execution_service_.post([=] {
+    if (request.task_spec().type() == TaskType::ACTOR_CREATION_TASK) {
+      bool is_already_bind_with_actor = false;
+      {
+        absl::MutexLock lock(&mutex_);
+        is_already_bind_with_actor = !actor_id_.IsNil();
+      }
+      if (is_already_bind_with_actor) {
+        send_reply_callback(Status::OK(), nullptr, nullptr);
+        return;
+      }
+    }
     direct_task_receiver_->HandlePushTask(request, reply, send_reply_callback);
   });
 }
