@@ -16,13 +16,6 @@ namespace gcs {
 class GcsLeasedWorker;
 class GcsActor {
  public:
-  enum CreateStatus {
-    PENDING,
-    CREATING,
-    CREATED,
-  };
-
- public:
   explicit GcsActor(rpc::ActorTableData &&actor_table_data)
       : actor_table_data_(std::move(actor_table_data)) {}
 
@@ -46,7 +39,6 @@ class GcsActor {
  private:
   rpc::ActorTableData actor_table_data_;
   std::weak_ptr<GcsLeasedWorker> worker_;
-  CreateStatus create_status_ = PENDING;
 };
 
 class GcsNode;
