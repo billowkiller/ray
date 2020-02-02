@@ -2,6 +2,8 @@ package org.ray.api.options;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.ray.api.LifeCycleGroup;
+import org.ray.api.SlotSet;
 
 /**
  * The options for creating actor.
@@ -21,15 +23,19 @@ public class ActorCreationOptions extends BaseTaskOptions {
 
   public final String jvmOptions;
 
-  public final boolean pending;
+  public final SlotSet slotSet;
+
+  public final LifeCycleGroup lifeCycleGroup;
 
   private ActorCreationOptions(Map<String, Double> resources, int maxReconstructions,
-      boolean useDirectCall, String jvmOptions, boolean pending) {
+      boolean useDirectCall, String jvmOptions, SlotSet slotSet,
+      LifeCycleGroup lifeCycleGroup) {
     super(resources);
     this.maxReconstructions = maxReconstructions;
     this.useDirectCall = useDirectCall;
     this.jvmOptions = jvmOptions;
-    this.pending = pending;
+    this.slotSet = slotSet;
+    this.lifeCycleGroup = lifeCycleGroup;
   }
 
   /**
@@ -41,7 +47,8 @@ public class ActorCreationOptions extends BaseTaskOptions {
     private int maxReconstructions = NO_RECONSTRUCTION;
     private boolean useDirectCall = DEFAULT_USE_DIRECT_CALL;
     private String jvmOptions = null;
-    private boolean pending = false;
+    private SlotSet slotSet = null;
+    private LifeCycleGroup lifeCycleGroup = null;
 
     public Builder setResources(Map<String, Double> resources) {
       this.resources = resources;
@@ -66,14 +73,19 @@ public class ActorCreationOptions extends BaseTaskOptions {
       return this;
     }
 
-    public Builder setPending(boolean pending) {
-      this.pending = pending;
+    public Builder setSlotSet(SlotSet slotSet) {
+      this.slotSet = slotSet;
+      return this;
+    }
+
+    public Builder setLifeCycleGroup(LifeCycleGroup lifeCycleGroup) {
+      this.lifeCycleGroup = lifeCycleGroup;
       return this;
     }
 
     public ActorCreationOptions createActorCreationOptions() {
       return new ActorCreationOptions(resources, maxReconstructions, useDirectCall, jvmOptions,
-          pending);
+          slotSet, lifeCycleGroup);
     }
   }
 

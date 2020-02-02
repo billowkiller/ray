@@ -3,8 +3,9 @@ package org.ray.runtime;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.ray.api.LifeCycleGroup;
+import org.ray.api.PlacementGroup;
 import org.ray.api.RayActor;
-import org.ray.api.RayActorGroup;
 import org.ray.api.RayObject;
 import org.ray.api.RayPyActor;
 import org.ray.api.WaitResult;
@@ -12,8 +13,8 @@ import org.ray.api.function.RayFunc;
 import org.ray.api.id.ObjectId;
 import org.ray.api.id.UniqueId;
 import org.ray.api.options.ActorCreationOptions;
-import org.ray.api.options.ActorGroupOptions;
 import org.ray.api.options.CallOptions;
+import org.ray.api.options.PlacementGroupOptions;
 import org.ray.api.runtime.RayRuntime;
 import org.ray.api.runtimecontext.RuntimeContext;
 import org.ray.runtime.config.RayConfig;
@@ -162,7 +163,13 @@ public class RayMultiWorkerNativeRuntime implements RayRuntime {
   }
 
   @Override
-  public RayActorGroup createActorGroup(List<RayActor<?>> actors, ActorGroupOptions options) {
+  public PlacementGroup createPlacementGroup(PlacementGroupOptions options) {
+    // TODO(yuyiming): impl
+    return null;
+  }
+
+  @Override
+  public LifeCycleGroup createLifeCycleGroup() {
     // TODO(yuyiming): impl
     return null;
   }

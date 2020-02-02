@@ -2,9 +2,9 @@ package org.ray.api.runtime;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.ray.api.options.ActorGroupOptions;
+import org.ray.api.LifeCycleGroup;
+import org.ray.api.PlacementGroup;
 import org.ray.api.RayActor;
-import org.ray.api.RayActorGroup;
 import org.ray.api.RayObject;
 import org.ray.api.RayPyActor;
 import org.ray.api.WaitResult;
@@ -13,6 +13,7 @@ import org.ray.api.id.ObjectId;
 import org.ray.api.id.UniqueId;
 import org.ray.api.options.ActorCreationOptions;
 import org.ray.api.options.CallOptions;
+import org.ray.api.options.PlacementGroupOptions;
 import org.ray.api.runtimecontext.RuntimeContext;
 
 /**
@@ -117,7 +118,20 @@ public interface RayRuntime {
   <T> RayActor<T> createActor(RayFunc actorFactoryFunc, Object[] args,
       ActorCreationOptions options);
 
-  RayActorGroup createActorGroup(List<RayActor<?>> actors, ActorGroupOptions options);
+  /**
+   * Create a placement group and preallocate the actor slots.
+   *
+   * @param options The options for creating the placement group.
+   * @return A handle to the created placement group.
+   */
+  PlacementGroup createPlacementGroup(PlacementGroupOptions options);
+
+  /**
+   * Creating a life cycle group.
+   *
+   * @return A handle to the created life cycle group.
+   */
+  LifeCycleGroup createLifeCycleGroup();
 
   RuntimeContext getRuntimeContext();
 
