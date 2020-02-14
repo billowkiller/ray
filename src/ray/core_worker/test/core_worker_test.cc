@@ -92,9 +92,7 @@ class CoreWorkerTest : public ::testing::Test {
     }
 
     // start gcs server
-    if (getenv("RAY_GCS_SERVICE_ENABLED") != nullptr) {
-      gcs_server_pid_ = StartGcsServer("127.0.0.1");
-    }
+    gcs_server_pid_ = StartGcsServer("127.0.0.1");
 
     // start raylet on each node. Assign each node with different resources so that
     // a task can be scheduled to the desired node.
