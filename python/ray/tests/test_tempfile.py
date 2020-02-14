@@ -100,8 +100,8 @@ def test_raylet_tempfiles(shutdown_only):
     log_files = set(os.listdir(node.get_logs_dir_path()))
     assert log_files.issuperset({
         "log_monitor.out", "log_monitor.err", "plasma_store.out",
-        "plasma_store.err", "monitor.out", "monitor.err", "raylet_monitor.out",
-        "raylet_monitor.err", "redis-shard_0.out", "redis-shard_0.err",
+        "plasma_store.err", "monitor.out", "monitor.err",
+        "redis-shard_0.out", "redis-shard_0.err",
         "redis.out", "redis.err", "raylet.out", "raylet.err"
     })  # with raylet logs
     socket_files = set(os.listdir(node.get_sockets_dir_path()))
@@ -116,8 +116,8 @@ def test_raylet_tempfiles(shutdown_only):
     log_files = set(os.listdir(node.get_logs_dir_path()))
     assert log_files.issuperset({
         "log_monitor.out", "log_monitor.err", "plasma_store.out",
-        "plasma_store.err", "monitor.out", "monitor.err", "raylet_monitor.out",
-        "raylet_monitor.err", "redis-shard_0.out", "redis-shard_0.err",
+        "plasma_store.err", "monitor.out", "monitor.err",
+        "redis-shard_0.out", "redis-shard_0.err",
         "redis.out", "redis.err", "raylet.out", "raylet.err"
     })  # with raylet logs
 
