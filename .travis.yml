@@ -19,6 +19,7 @@ matrix:
       script:
         - if [ $RAY_CI_JAVA_AFFECTED != "1" ]; then exit; fi
         - ./java/test.sh
+        - cat /tmp/ray/session_latest/logs/raylet*.out
 
 install:
   - eval `python $TRAVIS_BUILD_DIR/ci/travis/determine_tests_to_run.py`
