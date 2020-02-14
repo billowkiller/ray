@@ -123,10 +123,12 @@ public class MultiThreadingTest extends BaseTest {
     return "ok";
   }
 
+  @Test(timeOut = 2 * 1000)
   public void testInDriver() {
     testMultiThreading();
   }
 
+  @Test(timeOut = 2 * 1000)
   public void testInWorker() {
     // Single-process mode doesn't have real workers.
     TestUtils.skipTestUnderSingleProcess();

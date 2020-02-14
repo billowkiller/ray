@@ -49,7 +49,7 @@ namespace raylet {
 WorkerPool::WorkerPool(int num_workers, int maximum_startup_concurrency,
                        std::shared_ptr<gcs::GcsClient> gcs_client,
                        const WorkerCommandMap &worker_commands)
-    : maximum_startup_concurrency_(maximum_startup_concurrency),
+    : maximum_startup_concurrency_(1),
       gcs_client_(std::move(gcs_client)) {
   RAY_CHECK(maximum_startup_concurrency > 0);
 #ifdef _WIN32
@@ -143,9 +143,9 @@ int WorkerPool::StartWorkerProcess(const Language &language,
   }
   if (starting_workers >= maximum_startup_concurrency_) {
     // Workers have been started, but not registered. Force start disabled -- returning.
-    RAY_LOG(DEBUG) << "Worker not started, " << starting_workers
-                   << " workers of language type " << static_cast<int>(language)
-                   << " pending registration";
+    RAY_LOG(INFO) << "Worker not started, " << starting_workers
+                  << " workers of language type " << static_cast<int>(language)
+                  << " pending registration";
     return -1;
   }
   // Either there are no workers pending registration or the worker start is being forced.
@@ -200,8 +200,8 @@ int WorkerPool::StartWorkerProcess(const Language &language,
     RAY_LOG(FATAL) << "Failed to fork worker process: " << strerror(errno);
   } else if (pid > 0) {
     // Parent process case.
-    RAY_LOG(DEBUG) << "Started worker process of " << workers_to_start
-                   << " worker(s) with pid " << pid;
+    RAY_LOG(INFO) << "Started worker process of " << workers_to_start
+                  << " worker(s) with pid " << pid;
     state.starting_worker_processes.emplace(pid, workers_to_start);
     return pid;
   }
