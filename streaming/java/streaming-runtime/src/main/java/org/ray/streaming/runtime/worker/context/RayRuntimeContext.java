@@ -2,9 +2,20 @@ package org.ray.streaming.runtime.worker.context;
 
 import static org.ray.streaming.util.Config.STREAMING_BATCH_MAX_COUNT;
 
+import com.google.common.base.Preconditions;
 import java.util.Map;
 import org.ray.streaming.api.context.RuntimeContext;
 import org.ray.streaming.runtime.core.graph.ExecutionTask;
+import org.ray.streaming.state.backend.KeyStateBackend;
+import org.ray.streaming.state.backend.OperatorStateBackend;
+import org.ray.streaming.state.backend.TransactionKeyStateBackend;
+import org.ray.streaming.state.keystate.desc.AbstractStateDescriptor;
+import org.ray.streaming.state.keystate.desc.ListStateDescriptor;
+import org.ray.streaming.state.keystate.desc.MapStateDescriptor;
+import org.ray.streaming.state.keystate.desc.ValueStateDescriptor;
+import org.ray.streaming.state.keystate.state.ListState;
+import org.ray.streaming.state.keystate.state.MapState;
+import org.ray.streaming.state.keystate.state.ValueState;
 
 /**
  * Use Ray to implement RuntimeContext.
@@ -16,6 +27,15 @@ public class RayRuntimeContext implements RuntimeContext {
   private Long batchId;
   private final Long maxBatch;
   private Map<String, String> config;
+  /**
+   * Backend for keyed state. This might be empty if we're not on a keyed stream.
+   */
+  protected transient KeyStateBackend keyStateManager;
+  /**
+   * Backend for operator state. This might be empty
+   */
+  protected transient OperatorStateBackend operatorStateManager;
+
 
   public RayRuntimeContext(ExecutionTask executionTask, Map<String, String> config,
       int parallelism) {
@@ -51,11 +71,61 @@ public class RayRuntimeContext implements RuntimeContext {
   }
 
   @Override
+  public void setBatchId(long batchId) {
+    if (this.keyStateManager != null) {
+      this.keyStateManager.setBatchId(batchId);
+    }
+    if (this.operatorStateManager != null) {
+      this.operatorStateManager.setBatchId(batchId);
+    }
+    this.batchId = batchId;
+  }
+
+  @Override
   public Long getMaxBatch() {
     return maxBatch;
   }
 
-  public void setBatchId(Long batchId) {
-    this.batchId = batchId;
+  @Override
+  public Map<String, String> getConfig() {
+    return config;
+  }
+
+  @Override
+  public void setCurrentKey(Object key) {
+    this.keyStateManager.setCurrentKey(key);
+  }
+
+  @Override
+  public KeyStateBackend getKeyStateManager() {
+    return keyStateManager;
+  }
+
+  public void setKeyStateManager(KeyStateBackend keyStateManager) {
+    this.keyStateManager = keyStateManager;
+  }
+
+  @Override
+  public <T> ValueState<T> getValueState(ValueStateDescriptor<T> stateDescriptor) {
+    stateSanityAndPresetAndSetMetrics(stateDescriptor, this.keyStateManager);
+    return this.keyStateManager.getValueState(stateDescriptor);
+  }
+
+  @Override
+  public <T> ListState<T> getListState(ListStateDescriptor<T> stateDescriptor) {
+    stateSanityAndPresetAndSetMetrics(stateDescriptor, this.keyStateManager);
+    return this.keyStateManager.getListState(stateDescriptor);
+  }
+
+  @Override
+  public <S, T> MapState<S, T> getMapState(MapStateDescriptor<S, T> stateDescriptor) {
+    stateSanityAndPresetAndSetMetrics(stateDescriptor, this.keyStateManager);
+    return this.keyStateManager.getMapState(stateDescriptor);
+  }
+
+  protected void stateSanityAndPresetAndSetMetrics(AbstractStateDescriptor stateDescriptor,
+                                                   TransactionKeyStateBackend backend) {
+    Preconditions.checkNotNull(stateDescriptor, "The state properties must not be null");
+    Preconditions.checkNotNull(backend, "keyState must not be null");
   }
 }
