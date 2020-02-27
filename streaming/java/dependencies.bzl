@@ -18,6 +18,7 @@ def gen_streaming_java_deps():
             "org.mockito:mockito_all:1.10.19",
             "org.apache.commons:commons-lang3:3.3.2",
             "com.twmacinta:fast-md5:2.7.1",
+            "org.msgpack:msgpack-core:0.8.20",
         ],
         repositories = [
             "https://repo1.maven.org/maven2/",
