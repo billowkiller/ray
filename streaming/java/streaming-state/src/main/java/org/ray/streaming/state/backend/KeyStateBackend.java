@@ -14,8 +14,6 @@ import org.ray.streaming.state.keystate.state.facade.ValueStateFacade;
 
 /**
  * key state backend manager, managing different kinds of states.
- *
- * @author wutao on 2019/7/25
  */
 public class KeyStateBackend extends TransactionKeyStateBackend {
 

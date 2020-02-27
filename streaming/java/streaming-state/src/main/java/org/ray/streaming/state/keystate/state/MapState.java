@@ -6,8 +6,6 @@ import java.util.Map.Entry;
 
 /**
  * MapState interface.
- *
- * @author wutao on 2019/7/25
  */
 public interface MapState<K, V> extends State {
 

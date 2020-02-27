@@ -22,7 +22,7 @@ public interface RuntimeContext {
 
   Long getBatchId();
 
-  void setBatchId(long batchId);
+  void setCheckpointId(long checkpointId);
 
   Long getMaxBatch();
 

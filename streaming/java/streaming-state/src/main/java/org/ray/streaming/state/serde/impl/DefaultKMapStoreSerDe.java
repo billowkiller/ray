@@ -4,7 +4,7 @@ import org.ray.streaming.state.serde.IKMapStoreSerDe;
 import org.ray.streaming.state.serde.SerDeHelper;
 
 /**
- * Created by eagle on 2018/8/28.
+ * KEY MAP SER DE.
  */
 public class DefaultKMapStoreSerDe<K, S, T> extends AbstractSerDe
     implements IKMapStoreSerDe<K, S, T> {

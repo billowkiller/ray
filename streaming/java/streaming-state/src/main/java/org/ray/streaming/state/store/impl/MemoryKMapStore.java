@@ -8,7 +8,6 @@ import org.ray.streaming.state.store.IKMapStore;
 
 /**
  * Memory Key Map Store.
- * Created by eagle on 2018/8/6.
  */
 public class MemoryKMapStore<K, S, T> implements IKMapStore<K, S, T> {
 

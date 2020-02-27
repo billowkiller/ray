@@ -6,8 +6,6 @@ import org.ray.streaming.state.keystate.desc.AbstractStateDescriptor;
 
 /**
  * Basic State.
- *
- * @author wutao on 2019/7/27
  */
 public abstract class AbstractState<T> {
 

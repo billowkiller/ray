@@ -5,8 +5,6 @@ import org.ray.streaming.state.keystate.state.State;
 
 /**
  * This class defines basic data structures of StateDescriptor.
- *
- * @author wutao on 2019/7/25
  */
 public abstract class AbstractStateDescriptor<S extends State, T> {
 

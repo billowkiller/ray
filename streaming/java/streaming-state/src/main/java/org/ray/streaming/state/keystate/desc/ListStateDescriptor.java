@@ -5,8 +5,6 @@ import org.ray.streaming.state.keystate.state.ListState;
 
 /**
  * ListStateDescriptor.
- *
- * @author wutao on 2019/7/25
  */
 public class ListStateDescriptor<T> extends AbstractStateDescriptor<ListState<T>, T> {
 

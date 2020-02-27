@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by eagle on 2018/8/28.
+ * AbstractSerDe. Generate row key.
  */
 public abstract class AbstractSerDe {
 

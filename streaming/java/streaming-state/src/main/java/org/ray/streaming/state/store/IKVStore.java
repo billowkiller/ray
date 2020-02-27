@@ -4,7 +4,6 @@ import java.io.IOException;
 
 /**
  * Key Value Store interface.
- * Created by eagle on 2018/8/6.
  */
 public interface IKVStore<K, V> extends IStore {
 

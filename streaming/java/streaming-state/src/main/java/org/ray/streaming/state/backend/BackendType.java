@@ -1,7 +1,7 @@
 package org.ray.streaming.state.backend;
 
 /**
- * @author wutao on 2018/8/10.
+ * Backend Types.
  */
 public enum BackendType {
   /**

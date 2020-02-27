@@ -71,14 +71,14 @@ public class RayRuntimeContext implements RuntimeContext {
   }
 
   @Override
-  public void setBatchId(long batchId) {
+  public void setCheckpointId(long checkpointId) {
     if (this.keyStateManager != null) {
-      this.keyStateManager.setBatchId(batchId);
+      this.keyStateManager.setBatchId(checkpointId);
     }
     if (this.operatorStateManager != null) {
-      this.operatorStateManager.setBatchId(batchId);
+      this.operatorStateManager.setBatchId(checkpointId);
     }
-    this.batchId = batchId;
+    this.batchId = checkpointId;
   }
 
   @Override

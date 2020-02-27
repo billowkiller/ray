@@ -2,8 +2,6 @@ package org.ray.streaming.state;
 
 /**
  * RuntimeException wrapper.
- *
- * @author wutao on 2019/12/26.
  */
 public class StateException extends RuntimeException {
 

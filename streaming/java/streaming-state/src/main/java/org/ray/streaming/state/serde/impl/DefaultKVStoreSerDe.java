@@ -4,7 +4,7 @@ import org.ray.streaming.state.serde.IKVStoreSerDe;
 import org.ray.streaming.state.serde.SerDeHelper;
 
 /**
- * Created by eagle on 2018/8/28.
+ * KV Store SerDe.
  */
 public class DefaultKVStoreSerDe<K, V> extends AbstractSerDe implements IKVStoreSerDe<K, V> {
 

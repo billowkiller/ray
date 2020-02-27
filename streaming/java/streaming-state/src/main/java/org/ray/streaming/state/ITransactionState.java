@@ -2,7 +2,6 @@ package org.ray.streaming.state;
 
 /**
  * TransactionState interface.
- * Created by eagle on 2019/7/30.
  */
 public interface ITransactionState {
 

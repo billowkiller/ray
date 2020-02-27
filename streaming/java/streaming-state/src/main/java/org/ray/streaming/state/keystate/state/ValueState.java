@@ -2,8 +2,6 @@ package org.ray.streaming.state.keystate.state;
 
 /**
  * ValueState interface.
- *
- * @author wutao on 2019/7/25
  */
 public interface ValueState<T> extends OneOutState<T> {
 

@@ -10,8 +10,6 @@ import org.ray.streaming.state.strategy.AbstractTransactionState;
 
 /**
  * This class defines MapState Wrapper, connecting state and backend.
- *
- * @author wutao on 2018/8/2.
  */
 public class MapStateFacade<K, V> extends AbstractTransactionState<Map<K, V>> implements
     IKVState<String, Map<K, V>> {

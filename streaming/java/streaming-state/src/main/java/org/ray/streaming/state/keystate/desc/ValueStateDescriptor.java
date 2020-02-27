@@ -4,8 +4,6 @@ import org.ray.streaming.state.keystate.state.ValueState;
 
 /**
  * ValueStateDescriptor.
- *
- * @author wutao on 2019/7/25
  */
 public class ValueStateDescriptor<T> extends AbstractStateDescriptor<ValueState<T>, T> {
 

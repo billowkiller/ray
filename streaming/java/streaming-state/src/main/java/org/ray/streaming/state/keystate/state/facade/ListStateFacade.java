@@ -12,8 +12,6 @@ import org.ray.streaming.state.strategy.AbstractTransactionState;
 
 /**
  * This class defines ListState Wrapper, connecting state and backend.
- *
- * @author wutao on 2018/8/2.
  */
 public class ListStateFacade<T> extends AbstractTransactionState<List<T>> implements
     IKVState<String, List<T>> {

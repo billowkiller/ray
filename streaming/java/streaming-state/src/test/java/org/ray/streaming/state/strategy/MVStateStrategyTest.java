@@ -19,9 +19,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-/**
- * Created by eagle on 2019/8/1.
- */
 public class MVStateStrategyTest {
 
   private final String table = "kepler_hlg_ut";
@@ -365,8 +362,6 @@ public class MVStateStrategyTest {
     Assert.assertEquals(state.get(2), Integer.valueOf(2));
     Assert.assertEquals(state.get(8), Integer.valueOf(8));
     Assert.assertEquals(state.get(7), Integer.valueOf(7));
-
-    //中间的commit和ackCommit可以跳过，没作用
 
     this.keyStateBackend.commit(5, "");
     this.keyStateBackend.ackCommit(5, 5);

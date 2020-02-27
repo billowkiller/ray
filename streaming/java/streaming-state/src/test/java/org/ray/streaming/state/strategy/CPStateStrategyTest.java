@@ -21,9 +21,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-/**
- * Created by eagle on 2019/8/15.
- */
 public class CPStateStrategyTest {
 
   private final String table = "kepler_cp_store";

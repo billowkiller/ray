@@ -4,8 +4,6 @@ import java.util.List;
 
 /**
  * ListState interface.
- *
- * @author wutao on 2019/7/25
  */
 public interface ListState<T> extends OneOutState<List<T>> {
 

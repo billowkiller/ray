@@ -12,9 +12,6 @@ import org.ray.streaming.state.keystate.state.ValueState;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * Created by eagle on 2019/8/15.
- */
 public class KeyStateBackendTest {
 
   private AbstractStateBackend stateBackend;

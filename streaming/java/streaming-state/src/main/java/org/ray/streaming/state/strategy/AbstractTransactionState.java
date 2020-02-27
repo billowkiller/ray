@@ -8,7 +8,6 @@ import org.ray.streaming.state.store.IKVStore;
 
 /**
  * This class support ITransactionState.
- * Created by eagle on 2019/7/30.
  */
 
 public abstract class AbstractTransactionState<V> implements ITransactionState {

@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class define the multi-version store strategy, which leverages external storage's mvcc.
- * <p>
- * Created by eagle on 2019/7/31.
  */
 public class MVStateStrategy<V> extends AbstractStateStrategy<V> {
 
@@ -94,7 +92,6 @@ public class MVStateStrategy<V> extends AbstractStateStrategy<V> {
         }
 
         Map<String, byte[]> records = middleStore.get(batchIds.get(i));
-        //这里有可能commit异步已经删除了middleStore
         if (records != null) {
           if (records.containsKey(key)) {
             byte[] bytes = records.get(key);

@@ -12,8 +12,6 @@ import org.ray.streaming.state.keystate.state.ListState;
  * This class defines the implementation of operator state.
  * When the state is initialized, we must scan the whole table.
  * And if the state type is splitList, all the records must be spitted.
- *
- * @author wutao on 2018/8/4.
  */
 public class OperatorStateImpl<V> extends AbstractState<List<PartitionRecord<V>>>
     implements ListState<V> {

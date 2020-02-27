@@ -1,8 +1,7 @@
 package org.ray.streaming.state.keystate.state;
 
 /**
- * @author wutao
- * @date 2019/7/25
+ * one value per state.
  */
 public interface OneOutState<O> extends State {
 

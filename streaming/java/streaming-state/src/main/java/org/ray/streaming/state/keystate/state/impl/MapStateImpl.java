@@ -10,8 +10,6 @@ import org.ray.streaming.state.keystate.state.MapState;
 
 /**
  * MapState implementation.
- *
- * @author wutao on 2019/7/25
  */
 public class MapStateImpl<K, V> extends AbstractState<Map<K, V>> implements MapState<K, V> {
 

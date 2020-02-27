@@ -3,7 +3,7 @@ package org.ray.streaming.state.config;
 import java.util.Map;
 
 /**
- * @author wutao on 2019/12/26.
+ * state config keys.
  */
 public class ConfigKey {
 

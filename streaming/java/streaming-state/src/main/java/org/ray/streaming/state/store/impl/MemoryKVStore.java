@@ -7,7 +7,6 @@ import org.ray.streaming.state.store.IKVStore;
 
 /**
  * Memory Key Value Store.
- * Created by eagle on 2018/8/6.
  */
 public class MemoryKVStore<K, V> implements IKVStore<K, V> {
 

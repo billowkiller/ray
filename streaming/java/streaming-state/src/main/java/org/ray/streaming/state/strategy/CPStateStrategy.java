@@ -16,13 +16,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class define the checkpoint store strategy, which saves two-version data once.
- * Created by eagle on 2019/7/31.
  */
 public class CPStateStrategy<V> extends AbstractStateStrategy<V> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CPStateStrategy.class);
-
-  private static final int cpBatchSize = 5;
 
   public CPStateStrategy(IKVStore<String, Map<Long, byte[]>> backStore) {
     super(backStore);
@@ -30,57 +27,54 @@ public class CPStateStrategy<V> extends AbstractStateStrategy<V> {
 
   @Override
   public void finish(long batchId) {
-    if (batchId % cpBatchSize == 0) {
-      LOGGER.info("do finish batchId:{}", batchId);
-      Map<String, byte[]> cpStore = new HashMap<>();
-      for (Entry<String, StorageRecord<V>> entry : frontStore.entrySet()) {
-        String key = entry.getKey();
-        StorageRecord<V> value = entry.getValue();
-        cpStore.put(key, toByte(value));
-      }
-      middleStore.put(batchId, cpStore);
-      frontStore.clear();
+    LOGGER.info("do finish batchId:{}", batchId);
+    Map<String, byte[]> cpStore = new HashMap<>();
+    for (Entry<String, StorageRecord<V>> entry : frontStore.entrySet()) {
+      String key = entry.getKey();
+      StorageRecord<V> value = entry.getValue();
+      cpStore.put(key, toByte(value));
     }
+    middleStore.put(batchId, cpStore);
+    frontStore.clear();
   }
 
   @Override
   public Object commit(long batchId, Object state) {
-    if (batchId % cpBatchSize == 0) {
-      try {
-        LOGGER.info("do commit batchId:{}", batchId);
-        Map<String, byte[]> cpStore = middleStore.get(batchId);
-        if (cpStore == null) {
-          throw new StateException("why cp store is null");
-        }
-        for (Entry<String, byte[]> entry : cpStore.entrySet()) {
-          String key = entry.getKey();
-          byte[] value = entry.getValue();
-
-          //2 is new，1 is old，-1 indicates old batchId, -2 indicates new batchId
-          Map<Long, byte[]> remoteData = super.kvStore.get(key);
-          if (remoteData == null || remoteData.size() == 0) {
-            remoteData = new HashMap<>();
-            remoteData.put(2L, value);
-            remoteData.put(-2L, Longs.toByteArray(batchId));
-          } else {
-            long oldBatchId = Longs.fromByteArray(remoteData.get(-2L));
-            if (oldBatchId < batchId) {
-              //move the old data
-              remoteData.put(1L, remoteData.get(2L));
-              remoteData.put(-1L, remoteData.get(-2L));
-            }
-
-            //put the new data here
-            remoteData.put(2L, value);
-            remoteData.put(-2L, Longs.toByteArray(batchId));
-          }
-          super.kvStore.put(key, remoteData);
-        }
-        super.kvStore.flush();
-      } catch (Exception e) {
-        LOGGER.error(e.getMessage(), e);
-        throw new StateException(e);
+    try {
+      LOGGER.info("do commit batchId:{}", batchId);
+      Map<String, byte[]> cpStore = middleStore.get(batchId);
+      if (cpStore == null) {
+        throw new StateException("why cp store is null");
       }
+      for (Entry<String, byte[]> entry : cpStore.entrySet()) {
+        String key = entry.getKey();
+        byte[] value = entry.getValue();
+
+        // 2 is specific key in kv store and indicates that new value
+        // should be stored with this key after overwriting old value in key 1.
+        Map<Long, byte[]> remoteData = super.kvStore.get(key);
+        if (remoteData == null || remoteData.size() == 0) {
+          remoteData = new HashMap<>();
+          remoteData.put(2L, value);
+          remoteData.put(-2L, Longs.toByteArray(batchId));
+        } else {
+          long oldBatchId = Longs.fromByteArray(remoteData.get(-2L));
+          if (oldBatchId < batchId) {
+            //move the old data
+            remoteData.put(1L, remoteData.get(2L));
+            remoteData.put(-1L, remoteData.get(-2L));
+          }
+
+          //put the new data here
+          remoteData.put(2L, value);
+          remoteData.put(-2L, Longs.toByteArray(batchId));
+        }
+        super.kvStore.put(key, remoteData);
+      }
+      super.kvStore.flush();
+    } catch (Exception e) {
+      LOGGER.error(e.getMessage(), e);
+      throw new StateException(e);
     }
     return null;
   }
@@ -119,7 +113,7 @@ public class CPStateStrategy<V> extends AbstractStateStrategy<V> {
       Map<Long, byte[]> remoteData = super.kvStore.get(key);
       if (remoteData != null) {
         for (Entry<Long, byte[]> entry : remoteData.entrySet()) {
-          if (entry.getKey() > 0) { // 小于0的是存储的batchId
+          if (entry.getKey() > 0) {
             StorageRecord<V> tmp = toStorageRecord(entry.getValue());
             if (tmp.getBatchId() < batchId) {
               if (storageRecord == null) {
@@ -143,9 +137,7 @@ public class CPStateStrategy<V> extends AbstractStateStrategy<V> {
 
   @Override
   public void ackCommit(long batchId) {
-    if (batchId % cpBatchSize == 0) {
-      LOGGER.info("do ackCommit batchId:{}", batchId);
-      middleStore.remove(batchId);
-    }
+    LOGGER.info("do ackCommit batchId:{}", batchId);
+    middleStore.remove(batchId);
   }
 }

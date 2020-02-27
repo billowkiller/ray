@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 /**
  * This class defines the StoreManager Abstract class.
  * We use three layer to store the state, frontStore, middleStore and kvStore(remote).
- *
- * @author wutao on 2018/8/2.
  */
 public abstract class AbstractStateStrategy<V> implements ITransactionState {
 

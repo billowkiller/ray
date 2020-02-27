@@ -8,8 +8,6 @@ import org.ray.streaming.state.keystate.state.ListState;
 
 /**
  * ListState implementation.
- *
- * @author wutao on 2019/7/27
  */
 public class ListStateImpl<V> extends AbstractState<List<V>> implements ListState<V> {
 

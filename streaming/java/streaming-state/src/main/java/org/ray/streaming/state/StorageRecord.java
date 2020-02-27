@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 /**
  * save record with batchId.
- * Created by eagle on 2019/7/30.
  */
 public class StorageRecord<T> implements Serializable {
 

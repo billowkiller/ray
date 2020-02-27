@@ -7,9 +7,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-/**
- * Created by eagle on 2017/9/13.
- */
 public class DefaultKMapStoreSerDeTest {
 
   private DefaultKMapStoreSerDe<String, String, Map<String, String>> defaultKMapStoreSerDe;

@@ -1,17 +1,14 @@
 package org.ray.streaming.state.util;
 
-/**
- * Md5 utils for hbase rowkey
- * Created by hoterran on 3/1/16.
- */
-
 import com.twmacinta.util.MD5;
 import java.io.UnsupportedEncodingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Md5 utils for hbase rowkey
+ */
 public class Md5Util {
 
   public static final char[] hexChar = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',

@@ -4,12 +4,6 @@ import org.ray.streaming.state.serde.impl.DefaultKVStoreSerDe;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * Alipay.com Inc
- * Copyright (c) 2004-2017 All Rights Reserved.
- *
- * @author wutao on 2017/9/12.
- */
 public class DefaultKVStoreSerDeTest {
 
   DefaultKVStoreSerDe<String, Integer> serDe = new DefaultKVStoreSerDe<>();

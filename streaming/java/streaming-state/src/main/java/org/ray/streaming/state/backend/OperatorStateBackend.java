@@ -1,6 +1,5 @@
 package org.ray.streaming.state.backend;
 
-
 import org.ray.streaming.state.keystate.desc.ListStateDescriptor;
 import org.ray.streaming.state.keystate.state.ListState;
 import org.ray.streaming.state.keystate.state.facade.ListStateFacade;
@@ -8,8 +7,6 @@ import org.ray.streaming.state.keystate.state.impl.OperatorStateImpl;
 
 /**
  * OperatorState manager.
- *
- * @author wutao on 2019/7/26
  */
 public class OperatorStateBackend extends TransactionKeyStateBackend {
 

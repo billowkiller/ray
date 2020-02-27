@@ -9,7 +9,7 @@ import org.ray.streaming.state.store.impl.MemoryKMapStore;
 import org.ray.streaming.state.store.impl.MemoryKVStore;
 
 /**
- * @author wutao on 2019/7/26
+ * MemoryStateBackend. Supporting memory store.
  */
 public class MemoryStateBackend extends AbstractStateBackend {
 

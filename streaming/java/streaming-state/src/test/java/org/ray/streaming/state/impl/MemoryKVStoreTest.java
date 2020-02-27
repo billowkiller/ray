@@ -9,9 +9,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-/**
- * Created by eagle on 2019/8/14.
- */
 public class MemoryKVStoreTest {
 
   private AbstractStateBackend stateBackend;

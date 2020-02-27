@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 /**
  * value record for partition.
- *
- * @author wutao on 2018/8/4.
  */
 public class PartitionRecord<T> implements Serializable {
 

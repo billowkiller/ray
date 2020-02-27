@@ -7,12 +7,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-/**
- * Alipay.com Inc
- * Copyright (c) 2004-2017 All Rights Reserved.
- *
- * @author wutao on 2017/9/13.
- */
 public class ListStateFacadeTest extends StateFacadeTest {
 
   ListStateFacade<Integer> facade;

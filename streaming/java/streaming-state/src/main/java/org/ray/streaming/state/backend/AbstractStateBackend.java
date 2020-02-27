@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author wutao on 2019/7/26
+ * AbstractStateBackend. This class is state backend factory.
  */
 public abstract class AbstractStateBackend implements Serializable {
 

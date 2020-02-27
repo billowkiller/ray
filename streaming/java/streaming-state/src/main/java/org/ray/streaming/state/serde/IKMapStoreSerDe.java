@@ -2,7 +2,6 @@ package org.ray.streaming.state.serde;
 
 /**
  * Key Map serde.
- * Created by eagle on 2018/8/28.
  */
 public interface IKMapStoreSerDe<K, S, T> {
 

@@ -5,7 +5,6 @@ import java.util.Map;
 
 /**
  * Key Map Store interface.
- * Created by eagle on 2018/8/6.
  */
 public interface IKMapStore<K, S, T> extends IKVStore<K, Map<S, T>> {
 

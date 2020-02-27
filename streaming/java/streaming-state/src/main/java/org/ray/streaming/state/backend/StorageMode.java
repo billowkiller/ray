@@ -1,7 +1,7 @@
 package org.ray.streaming.state.backend;
 
 /**
- * @author wutao on 2019/7/26
+ * Storage model.
  */
 public enum StorageMode {
   /**

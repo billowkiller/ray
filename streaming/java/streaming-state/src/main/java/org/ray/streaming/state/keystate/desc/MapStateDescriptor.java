@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * MapStateDescriptor.
- *
- * @author wutao on 2019/7/25
  */
 public class MapStateDescriptor<K, V> extends AbstractStateDescriptor<MapState<K, V>, Map<K, V>> {
 

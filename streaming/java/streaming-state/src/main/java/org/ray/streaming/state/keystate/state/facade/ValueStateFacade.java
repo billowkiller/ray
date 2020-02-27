@@ -9,8 +9,6 @@ import org.ray.streaming.state.strategy.AbstractTransactionState;
 
 /**
  * This class defines ValueState Wrapper, connecting state and backend.
- *
- * @author wutao on 2018/8/2.
  */
 public class ValueStateFacade<T> extends AbstractTransactionState<T> implements
     IKVState<String, T> {

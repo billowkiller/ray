@@ -4,9 +4,6 @@ import static org.testng.Assert.assertEquals;
 
 import org.testng.annotations.Test;
 
-/**
- * Created by eagle on 2019/8/29.
- */
 public class KeyGroupAssignmentTest {
 
 

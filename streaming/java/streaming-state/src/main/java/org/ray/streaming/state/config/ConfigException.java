@@ -1,7 +1,7 @@
 package org.ray.streaming.state.config;
 
 /**
- * @author wutao on 2019/5/11.
+ * Config Exception.
  */
 public class ConfigException extends RuntimeException {
 

@@ -19,8 +19,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Transaction support primitive operations like finish, commit, ackcommit and rollback.
- *
- * @author wutao on 2018/8/3.
  */
 public abstract class TransactionKeyStateBackend implements ITransactionState {
 
